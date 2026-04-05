@@ -2,10 +2,13 @@ import json
 import time
 import logging
 
-from django.http import StreamingHttpResponse
+import jwt
+from django.http import StreamingHttpResponse, JsonResponse
 from django.utils import timezone
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import IsAuthenticated
+from django.views.decorators.http import require_GET
+from graphql_jwt.exceptions import JSONWebTokenError
+from graphql_jwt.shortcuts import get_user_by_token
+from graphql_jwt.utils import get_credentials
 
 from notification.models import Notification
 
@@ -14,6 +17,17 @@ logger = logging.getLogger(__name__)
 POLL_INTERVAL_SECONDS = 5
 KEEPALIVE_INTERVAL_SECONDS = 30
 MAX_IDLE_SECONDS = 300
+
+
+def _get_authenticated_user(request):
+    """Extract and verify JWT token from the request, returning the user or None."""
+    token = get_credentials(request)
+    if not token:
+        return None
+    try:
+        return get_user_by_token(token)
+    except (jwt.PyJWTError, JSONWebTokenError, Exception):
+        return None
 
 
 def _format_sse(data, event=None):
@@ -76,11 +90,14 @@ def _stream_notifications(user):
                 return
 
 
-@api_view(["GET"])
-@permission_classes([IsAuthenticated])
+@require_GET
 def notification_stream(request):
+    user = _get_authenticated_user(request)
+    if not user:
+        return JsonResponse({"error": "Authentication required"}, status=401)
+
     response = StreamingHttpResponse(
-        _stream_notifications(request.user),
+        _stream_notifications(user),
         content_type="text/event-stream",
     )
     response["Cache-Control"] = "no-cache"
