@@ -14,7 +14,7 @@ from notification.models import Notification
 
 logger = logging.getLogger(__name__)
 
-POLL_INTERVAL_SECONDS = 5
+POLL_INTERVAL_SECONDS = 250
 KEEPALIVE_INTERVAL_SECONDS = 30
 MAX_IDLE_SECONDS = 300
 
