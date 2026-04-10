@@ -21,6 +21,7 @@ EVENT_TYPES = [
     ("task.assigned", "task", DEFAULT_CHANNELS_ALL),
     ("task.completed", "task", DEFAULT_CHANNELS_ALL),
     ("task.failed", "task", DEFAULT_CHANNELS_ALL),
+    ("report.snapshot_ready", "report", DEFAULT_CHANNELS_IN_APP_ONLY),
 ]
 
 FRENCH_TEMPLATES = {
@@ -118,5 +119,10 @@ FRENCH_TEMPLATES = {
         "Tache echouee",
         "La tache {task_description} a echoue. {reason}.",
         "Tache echouee: {task_description}.",
+    ),
+    "report.snapshot_ready": (
+        "Cadre de résultats prêt",
+        "Le cadre de résultats \"{snapshot_name}\" est prêt. Cliquez pour télécharger.",
+        "",
     ),
 }
