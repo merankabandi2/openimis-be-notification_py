@@ -1,10 +1,18 @@
 import logging
 
 from django.contrib.contenttypes.models import ContentType
+from django.db.models import Q
+from django.utils import timezone
 
 from core.models import User
 
 logger = logging.getLogger(__name__)
+
+
+def _active_user_q():
+    """Q filter for active users (validity_to is null or in the future)."""
+    now = timezone.now()
+    return Q(validity_to__isnull=True) | Q(validity_to__gte=now)
 
 
 class RecipientResolver:
@@ -13,11 +21,17 @@ class RecipientResolver:
     @staticmethod
     def by_role(right_id):
         """All active interactive users with a specific permission/right."""
+        from core.models import UserRole, RoleRight
+        role_ids = RoleRight.objects.filter(
+            right_id=right_id,
+        ).values_list('role_id', flat=True)
+        i_user_ids = UserRole.objects.filter(
+            role_id__in=role_ids,
+        ).values_list('user_id', flat=True)
         return list(
             User.objects.filter(
-                is_active=True,
-                userrole__role__is_system__gte=0,
-                userrole__role__roleright__right_id=right_id,
+                _active_user_q(),
+                i_user__id__in=i_user_ids,
             ).distinct()
         )
 
