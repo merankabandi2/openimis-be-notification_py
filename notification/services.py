@@ -30,7 +30,6 @@ class RecipientResolver:
         ).values_list('user_id', flat=True)
         return list(
             User.objects.filter(
-                _active_user_q(),
                 i_user__id__in=i_user_ids,
             ).distinct()
         )
