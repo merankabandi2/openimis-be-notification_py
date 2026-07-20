@@ -1,18 +1,10 @@
 import logging
 
 from django.contrib.contenttypes.models import ContentType
-from django.db.models import Q
-from django.utils import timezone
 
 from core.models import User
 
 logger = logging.getLogger(__name__)
-
-
-def _active_user_q():
-    """Q filter for active users (validity_to is null or in the future)."""
-    now = timezone.now()
-    return Q(validity_to__isnull=True) | Q(validity_to__gte=now)
 
 
 class RecipientResolver:
@@ -20,19 +12,23 @@ class RecipientResolver:
 
     @staticmethod
     def by_role(right_id):
-        """All active interactive users with a specific permission/right."""
+        """All active interactive users with a specific permission/right.
+
+        RoleRight and UserRole are VersionedModels — filter_queryset() drops
+        expired rows, so revoked rights and removed role assignments no longer
+        yield recipients. User activeness is checked via is_active.
+        """
         from core.models import UserRole, RoleRight
-        role_ids = RoleRight.objects.filter(
+        role_ids = RoleRight.filter_queryset().filter(
             right_id=right_id,
         ).values_list('role_id', flat=True)
-        i_user_ids = UserRole.objects.filter(
+        i_user_ids = UserRole.filter_queryset().filter(
             role_id__in=role_ids,
         ).values_list('user_id', flat=True)
-        return list(
-            User.objects.filter(
-                i_user__id__in=i_user_ids,
-            ).distinct()
-        )
+        return [
+            u for u in User.objects.filter(i_user__id__in=i_user_ids).distinct()
+            if u.is_active
+        ]
 
     @staticmethod
     def by_task_group(task):
