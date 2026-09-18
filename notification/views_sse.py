@@ -1,10 +1,12 @@
 import json
-import time
 import logging
+from datetime import timezone as dt_timezone
 
 import jwt
+from django.conf import settings
 from django.http import StreamingHttpResponse, JsonResponse
 from django.utils import timezone
+from django.utils.dateparse import parse_datetime
 from django.views.decorators.http import require_GET
 from graphql_jwt.exceptions import JSONWebTokenError
 from graphql_jwt.shortcuts import get_user_by_token
@@ -14,9 +16,11 @@ from notification.models import Notification
 
 logger = logging.getLogger(__name__)
 
-POLL_INTERVAL_SECONDS = 250
-KEEPALIVE_INTERVAL_SECONDS = 30
-MAX_IDLE_SECONDS = 300
+# The stream answers with the current state and closes; the browser's
+# EventSource reconnects after this delay, so it is the effective polling
+# period of one open tab. A stream that stays open holds a WSGI worker thread
+# for its whole life, and a few tabs are enough to starve the worker pool.
+RETRY_MS = 60_000
 
 
 def _get_authenticated_user(request):
@@ -30,8 +34,26 @@ def _get_authenticated_user(request):
         return None
 
 
-def _format_sse(data, event=None):
+def _parse_last_event_id(value):
+    """Timestamp of the last event the browser saw (``Last-Event-ID``), or None."""
+    if not value:
+        return None
+    parsed = parse_datetime(value.strip())
+    if parsed is None:
+        return None
+    # Match the project's time-zone mode: the ORM rejects an aware datetime when
+    # USE_TZ is off and a naive one when it is on.
+    if settings.USE_TZ and timezone.is_naive(parsed):
+        parsed = timezone.make_aware(parsed, dt_timezone.utc)
+    elif not settings.USE_TZ and timezone.is_aware(parsed):
+        parsed = timezone.make_naive(parsed, dt_timezone.utc)
+    return parsed
+
+
+def _format_sse(data, event=None, event_id=None):
     lines = []
+    if event_id:
+        lines.append(f"id: {event_id}")
     if event:
         lines.append(f"event: {event}")
     lines.append(f"data: {json.dumps(data)}")
@@ -52,42 +74,41 @@ def _notification_to_dict(notif):
     }
 
 
-def _stream_notifications(user):
-    count = Notification.objects.filter(
-        recipient=user, channel="in_app", is_read=False
-    ).count()
-    yield _format_sse({"count": count}, event="unread_count")
+def _stream_notifications(user, since=None):
+    """Yield the reconnect delay, the notifications created after ``since``
+    (none on a first connection), then the unread count, and stop.
 
-    last_check = timezone.now()
-    idle_since = time.monotonic()
-    last_keepalive = time.monotonic()
+    Every event carries the creation timestamp as ``id`` so the browser sends
+    it back as ``Last-Event-ID`` and only newer notifications are replayed.
+    """
+    yield f"retry: {RETRY_MS}\n\n"
 
-    while True:
-        time.sleep(POLL_INTERVAL_SECONDS)
-
-        new_notifications = list(
+    stamp = timezone.now()
+    last_seen = since
+    if since is not None:
+        new_notifications = (
             Notification.objects.filter(
                 recipient=user,
                 channel="in_app",
-                created_at__gt=last_check,
+                created_at__gt=since,
             )
             .select_related("event_type")
             .order_by("created_at")
         )
+        for notif in new_notifications:
+            last_seen = notif.created_at
+            yield _format_sse(
+                _notification_to_dict(notif), event_id=notif.created_at.isoformat()
+            )
 
-        if new_notifications:
-            last_check = new_notifications[-1].created_at
-            idle_since = time.monotonic()
-            for notif in new_notifications:
-                yield _format_sse(_notification_to_dict(notif))
-        else:
-            now = time.monotonic()
-            if now - last_keepalive >= KEEPALIVE_INTERVAL_SECONDS:
-                yield ": keepalive\n\n"
-                last_keepalive = now
-
-            if now - idle_since >= MAX_IDLE_SECONDS:
-                return
+    count = Notification.objects.filter(
+        recipient=user, channel="in_app", is_read=False
+    ).count()
+    yield _format_sse(
+        {"count": count},
+        event="unread_count",
+        event_id=(last_seen or stamp).isoformat(),
+    )
 
 
 @require_GET
@@ -96,8 +117,9 @@ def notification_stream(request):
     if not user:
         return JsonResponse({"error": "Authentication required"}, status=401)
 
+    since = _parse_last_event_id(request.META.get("HTTP_LAST_EVENT_ID"))
     response = StreamingHttpResponse(
-        _stream_notifications(user),
+        _stream_notifications(user, since),
         content_type="text/event-stream",
     )
     response["Cache-Control"] = "no-cache"
