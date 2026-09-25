@@ -13,6 +13,7 @@ from graphql_jwt.shortcuts import get_user_by_token
 from graphql_jwt.utils import get_credentials
 
 from notification.models import Notification
+from notification.timestamps import isoformat_with_offset
 
 logger = logging.getLogger(__name__)
 
@@ -70,7 +71,7 @@ def _notification_to_dict(notif):
         "entity_url": notif.entity_url,
         "event_type": notif.event_type.code,
         "category": notif.event_type.category,
-        "created_at": notif.created_at.isoformat(),
+        "created_at": isoformat_with_offset(notif.created_at),
     }
 
 
