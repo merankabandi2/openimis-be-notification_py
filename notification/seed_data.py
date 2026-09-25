@@ -24,6 +24,8 @@ EVENT_TYPES = [
     ("report.snapshot_ready", "report", DEFAULT_CHANNELS_IN_APP_ONLY),
 ]
 
+# (subject, body, sms_body). sms_body is written without accents: a character outside
+# the GSM 7-bit alphabet switches an SMS to UCS-2, 70 characters per message.
 FRENCH_TEMPLATES = {
     "payroll.pending_approval": (
         "Payroll en attente d'approbation",
@@ -31,93 +33,93 @@ FRENCH_TEMPLATES = {
         "Payroll {payroll_name} en attente d'approbation.",
     ),
     "payroll.approved": (
-        "Payroll approuve",
-        "Le payroll {payroll_name} a ete approuve par {actor_name}.",
+        "Payroll approuvé",
+        "Le payroll {payroll_name} a été approuvé par {actor_name}.",
         "Payroll {payroll_name} approuve.",
     ),
     "payroll.rejected": (
-        "Payroll rejete",
-        "Le payroll {payroll_name} a ete rejete par {actor_name}.",
+        "Payroll rejeté",
+        "Le payroll {payroll_name} a été rejeté par {actor_name}.",
         "Payroll {payroll_name} rejete.",
     ),
     "payroll.reconciled": (
-        "Payroll reconcilie",
-        "Le payroll {payroll_name} a ete reconcilie avec succes.",
+        "Payroll réconcilié",
+        "Le payroll {payroll_name} a été réconcilié avec succès.",
         "Payroll {payroll_name} reconcilie.",
     ),
     "payroll.reconciliation_failed": (
-        "Echec de reconciliation",
-        "La reconciliation du payroll {payroll_name} a echoue. Statut: {status}.",
+        "Échec de réconciliation",
+        "La réconciliation du payroll {payroll_name} a échoué. Statut : {status}.",
         "Echec reconciliation {payroll_name}.",
     ),
     "activity.submitted": (
-        "Activite soumise pour validation",
-        "Une activite {activity_type} a {location} du {date} est en attente de validation.",
+        "Activité soumise pour validation",
+        "Une activité {activity_type} à {location} du {date} est en attente de validation.",
         "Activite {activity_type} a valider.",
     ),
     "activity.validated": (
-        "Activite validee",
-        "L'activite {activity_type} a {location} a ete validee par {actor_name}.",
+        "Activité validée",
+        "L'activité {activity_type} à {location} a été validée par {actor_name}.",
         "Activite {activity_type} validee.",
     ),
     "activity.rejected": (
-        "Activite rejetee",
-        "L'activite {activity_type} a {location} a ete rejetee par {actor_name}. Motif: {comment}.",
+        "Activité rejetée",
+        "L'activité {activity_type} à {location} a été rejetée par {actor_name}. Motif : {comment}.",
         "Activite {activity_type} rejetee: {comment}.",
     ),
     "grievance.created": (
         "Nouvelle plainte",
-        "Une nouvelle plainte #{ticket_number} a ete creee. Categorie: {category}. Priorite: {priority}.",
+        "Une nouvelle plainte #{ticket_number} a été créée. Catégorie : {category}. Priorité : {priority}.",
         "Nouvelle plainte #{ticket_number}.",
     ),
     "grievance.assigned": (
-        "Plainte assignee",
-        "La plainte #{ticket_number} vous a ete assignee par {actor_name}.",
+        "Plainte assignée",
+        "La plainte #{ticket_number} vous a été assignée par {actor_name}.",
         "Plainte #{ticket_number} vous est assignee.",
     ),
     "grievance.comment": (
         "Nouveau commentaire",
-        "{actor_name} a commente la plainte #{ticket_number}: \"{comment_preview}\".",
+        "{actor_name} a commenté la plainte #{ticket_number} : \"{comment_preview}\".",
         "Commentaire sur plainte #{ticket_number}.",
     ),
     "grievance.status_changed": (
         "Changement de statut",
-        "La plainte #{ticket_number} est passee au statut {new_status}.",
+        "La plainte #{ticket_number} est passée au statut {new_status}.",
         "Plainte #{ticket_number}: {new_status}.",
     ),
     "grievance.reopened": (
-        "Plainte reouverte",
-        "La plainte #{ticket_number} a ete reouverte par {actor_name}.",
+        "Plainte rouverte",
+        "La plainte #{ticket_number} a été rouverte par {actor_name}.",
         "Plainte #{ticket_number} reouverte.",
     ),
     "selection.quota_completed": (
-        "Selection par quota terminee",
-        "La selection par quota pour le programme {program_name}, round {round}, est terminee. {selected_count} menages selectionnes.",
+        "Sélection par quota terminée",
+        "La sélection par quota pour le programme {program_name}, round {round}, est terminée. {selected_count} ménages sélectionnés.",
         "Selection quota terminee: {selected_count} menages.",
     ),
     "selection.validation_completed": (
-        "Validation communautaire terminee",
-        "La validation communautaire pour {program_name} a {location} est terminee. {validated_count} valides, {rejected_count} rejetes.",
+        "Validation communautaire terminée",
+        "La validation communautaire pour {program_name} à {location} est terminée. {validated_count} validés, {rejected_count} rejetés.",
         "Validation communautaire terminee a {location}.",
     ),
     "selection.promotion_completed": (
-        "Promotion en beneficiaires terminee",
-        "{promoted_count} menages ont ete promus en beneficiaires pour {program_name}.",
+        "Promotion en bénéficiaires terminée",
+        "{promoted_count} ménages ont été promus en bénéficiaires pour {program_name}.",
         "{promoted_count} menages promus beneficiaires.",
     ),
     "task.assigned": (
-        "Tache assignee",
-        "Une tache requiert votre action: {task_description}.",
+        "Tâche assignée",
+        "Une tâche requiert votre action : {task_description}.",
         "Tache assignee: {task_description}.",
     ),
     "task.completed": (
-        "Tache completee",
-        "La tache {task_description} a ete completee par {actor_name}.",
+        "Tâche terminée",
+        "La tâche {task_description} a été terminée par {actor_name}.",
         "Tache completee: {task_description}.",
     ),
     "task.failed": (
-        "Tache echouee",
-        "La tache {task_description} a echoue. {reason}.",
+        "Tâche échouée",
+        "La tâche {task_description} a échoué. {reason}.",
         "Tache echouee: {task_description}.",
     ),
     "report.snapshot_ready": (
