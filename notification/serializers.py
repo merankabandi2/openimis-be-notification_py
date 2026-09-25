@@ -1,11 +1,22 @@
 from rest_framework import serializers
 
 from notification.models import Notification, NotificationEventType
+from notification.timestamps import storage_timezone
+
+
+class OffsetDateTimeField(serializers.DateTimeField):
+    """Renders naive ORM datetimes with the offset of the zone they are stored in,
+    so clients do not read them as their own local time."""
+
+    def default_timezone(self):
+        return storage_timezone()
 
 
 class NotificationSerializer(serializers.ModelSerializer):
     category = serializers.CharField(source="event_type.category", read_only=True)
     event_code = serializers.CharField(source="event_type.code", read_only=True)
+    created_at = OffsetDateTimeField(read_only=True)
+    read_at = OffsetDateTimeField(read_only=True)
 
     class Meta:
         model = Notification
