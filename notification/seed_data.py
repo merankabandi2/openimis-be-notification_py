@@ -24,7 +24,8 @@ EVENT_TYPES = [
     ("report.snapshot_ready", "report", DEFAULT_CHANNELS_IN_APP_ONLY),
 ]
 
-# (subject, body, sms_body). sms_body is written without accents: a character outside
+# (subject, body, sms_body). A grievance message names the ticket by its number
+# only; the e-mail links to the ticket. sms_body is written without accents: a character outside
 # the GSM 7-bit alphabet switches an SMS to UCS-2, 70 characters per message.
 FRENCH_TEMPLATES = {
     "payroll.pending_approval": (
@@ -69,27 +70,27 @@ FRENCH_TEMPLATES = {
     ),
     "grievance.created": (
         "Nouvelle plainte",
-        "Une nouvelle plainte #{ticket_number} a été créée. Catégorie : {category}. Priorité : {priority}.",
+        "Une nouvelle plainte #{ticket_number} a été enregistrée.",
         "Nouvelle plainte #{ticket_number}.",
     ),
     "grievance.assigned": (
         "Plainte assignée",
-        "La plainte #{ticket_number} vous a été assignée par {actor_name}.",
+        "La plainte #{ticket_number} vous a été assignée.",
         "Plainte #{ticket_number} vous est assignee.",
     ),
     "grievance.comment": (
         "Nouveau commentaire",
-        "{actor_name} a commenté la plainte #{ticket_number} : \"{comment_preview}\".",
+        "Un commentaire a été ajouté à la plainte #{ticket_number}.",
         "Commentaire sur plainte #{ticket_number}.",
     ),
     "grievance.status_changed": (
         "Changement de statut",
-        "La plainte #{ticket_number} est passée au statut {new_status}.",
-        "Plainte #{ticket_number}: {new_status}.",
+        "Le statut de la plainte #{ticket_number} a changé.",
+        "Plainte #{ticket_number}: statut modifie.",
     ),
     "grievance.reopened": (
         "Plainte rouverte",
-        "La plainte #{ticket_number} a été rouverte par {actor_name}.",
+        "La plainte #{ticket_number} a été rouverte.",
         "Plainte #{ticket_number} reouverte.",
     ),
     "selection.quota_completed": (

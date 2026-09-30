@@ -1,3 +1,4 @@
+import re
 from io import StringIO
 
 from django.core.management import call_command
@@ -25,11 +26,19 @@ class FrenchTemplatesTextTest(SimpleTestCase):
     def test_grievance_bodies(self):
         self.assertEqual(
             FRENCH_TEMPLATES["grievance.created"][1],
-            "Une nouvelle plainte #{ticket_number} a été créée. "
-            "Catégorie : {category}. Priorité : {priority}.")
+            "Une nouvelle plainte #{ticket_number} a été enregistrée.")
         self.assertEqual(
             FRENCH_TEMPLATES["grievance.status_changed"][1],
-            "La plainte #{ticket_number} est passée au statut {new_status}.")
+            "Le statut de la plainte #{ticket_number} a changé.")
+
+    def test_grievance_templates_carry_the_ticket_number_only(self):
+        for code, texts in FRENCH_TEMPLATES.items():
+            if not code.startswith("grievance."):
+                continue
+            for text in texts:
+                with self.subTest(code=code, text=text):
+                    placeholders = set(re.findall(r"{(\w+)}", text))
+                    self.assertLessEqual(placeholders, {"ticket_number"})
 
 
 class SeedNotificationTemplatesCommandTest(TestCase):
