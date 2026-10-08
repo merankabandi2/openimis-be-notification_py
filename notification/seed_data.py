@@ -22,6 +22,8 @@ EVENT_TYPES = [
     ("task.completed", "task", DEFAULT_CHANNELS_ALL),
     ("task.failed", "task", DEFAULT_CHANNELS_ALL),
     ("report.snapshot_ready", "report", DEFAULT_CHANNELS_IN_APP_ONLY),
+    ("analytics.export_ready", "report", DEFAULT_CHANNELS_IN_APP_ONLY),
+    ("analytics.export_failed", "report", DEFAULT_CHANNELS_IN_APP_ONLY),
 ]
 
 # (subject, body, sms_body). A grievance message names the ticket by its number
@@ -126,6 +128,16 @@ FRENCH_TEMPLATES = {
     "report.snapshot_ready": (
         "Cadre de résultats prêt",
         "Le cadre de résultats \"{snapshot_name}\" est prêt. Cliquez pour télécharger.",
+        "",
+    ),
+    "analytics.export_ready": (
+        "Export analytique prêt",
+        "L'export {export_format} de {row_count} lignes est prêt. Cliquez pour ouvrir l'historique des exports.",
+        "",
+    ),
+    "analytics.export_failed": (
+        "Export analytique refusé",
+        "L'export {export_format} n'a pas été produit : {reason}",
         "",
     ),
 }

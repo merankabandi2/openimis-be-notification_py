@@ -68,3 +68,17 @@ class SeedNotificationTemplatesCommandTest(TestCase):
         self.assertTrue(event_type.is_active)
         self.assertEqual(event_type.default_channels, {"in_app": True, "email": True, "sms": False})
         self.assertTrue(NotificationTemplate.objects.filter(event_type=event_type, language="fr").exists())
+
+    def test_analytics_export_events_are_seeded_in_app_only(self):
+        call_command("seed_notification_templates", stdout=StringIO())
+
+        for code, placeholders in (
+            ("analytics.export_ready", {"export_format", "row_count"}),
+            ("analytics.export_failed", {"export_format", "reason"}),
+        ):
+            with self.subTest(code=code):
+                event_type = NotificationEventType.objects.get(code=code)
+                self.assertEqual(event_type.category, "report")
+                self.assertEqual(event_type.default_channels, {"in_app": True, "email": False, "sms": False})
+                template = NotificationTemplate.objects.get(event_type=event_type, language="fr")
+                self.assertEqual(set(re.findall(r"{(\w+)}", template.body)), placeholders)
